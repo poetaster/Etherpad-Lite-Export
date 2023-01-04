@@ -17,18 +17,18 @@ if(!file_exists(CONFIG_FILE)) {
 $config = Spyc::YAMLLoad(CONFIG_FILE);
 
 # connect to db
-$db = mysql_connect($config['db']['host'],$config['db']['username'],$config['db']['password']);
-$result = mysql_select_db($config['db']['database']);
+$db = mysqli_connect($config['db']['host'],$config['db']['username'],$config['db']['password'],$config['db']['database']);
+$result = mysqli_select_db($db, $config['db']['database']);
 
 # print summary info
 print("Starting eplite export (v".VERSION.")\n");
-$results = mysql_query("SELECT count(*) as total FROM store");
-$row = mysql_fetch_assoc($results);
+$results = mysqli_query($db, "SELECT count(*) as total FROM store");
+$row = mysqli_fetch_assoc($results);
 $total = $row['total'];
 print("  Found $total rows in the store\n");
-$results = mysql_query("SELECT count(*) as total FROM  `store` ".
+$results = mysqli_query($db, "SELECT count(*) as total FROM  `store` ".
     "WHERE  `key` NOT LIKE  '%:revs:%' AND  `key` LIKE  'pad:%' AND `key` NOT LIKE  '%:chat:%'");
-$row = mysql_fetch_assoc($results);
+$row = mysqli_fetch_assoc($results);
 $total = $row['total'];
 print("  Found $total unique pads in the store\n");
 
@@ -75,8 +75,8 @@ fwrite($server_toc,"<h1>Live Table of Contents</h1>");
 fwrite($server_toc,"<ul>\n");
 
 # go through all the pad master entries, saving the content of each
-$results = mysql_query("SELECT * FROM  `store` WHERE  `key` NOT LIKE  '%:revs:%' AND  `key` LIKE  'pad:%' AND `key` NOT LIKE  '%:chat:%' ORDER BY `key`");
-while ($row = mysql_fetch_assoc($results)) {
+$results = mysqli_query($db, "SELECT * FROM  `store` WHERE  `key` NOT LIKE  '%:revs:%' AND  `key` LIKE  'pad:%' AND `key` NOT LIKE  '%:chat:%' ORDER BY `key`");
+while ($row = mysqli_fetch_assoc($results)) {
   $title = str_replace("pad:","",$row['key']);
   $pad_value = json_decode($row['value']);
   $contents = $pad_value->atext->text;
@@ -103,6 +103,6 @@ end_html_file($index);
 end_html_file($server_toc);
 fclose($index);
 fclose($server_toc);
-mysql_close($db);
+mysqli_close($db);
 
 print("Done\n");
